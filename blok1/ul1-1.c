@@ -1,44 +1,41 @@
-#include "ul1-1.h"
+#include "blok1_richnakova.h"
 
 void binary(int num) {
     // if num can be shifted to the right (divided by 2), shift it
     if (num >> 1) {
         binary(num >> 1);
     }
-    // last bit of num AND 1 -> print last bit of num
+    // num AND 1 -> print the last bit of num (or the reminder after division of 2)
     printf((num & 1) ? "1" : "0");
 }
 
 void printInBinary(int num) {
-    printf("%d decimal -> ", num);
+    printf("\t-> ");
     binary(num);
     printf(" binary\n");
 }
 
 void printInDecimal(int num) {
-    printf("%d decimal -> %d decimal\n", num, num);
+    printf("\t-> %d decimal\n", num);
 }
 
 void printInHex(int num) {
-    printf("%d decimal -> %x hexadecimal\n", num, num);
+    printf("\t-> %x hexadecimal\n", num);
 }
 
 int main(void) {
     int num = 33777;
     char ch = 'X';
 
+    printf("%d decimal ->\n", num);
     printInBinary(num);
-    printf("%c char -> ", ch);
-    printInBinary(ch);
-    printf("\n");
-
     printInDecimal(num);
-    printf("%c char -> ", ch);
-    printInDecimal(ch);
+    printInHex(num);
     printf("\n");
 
-    printInHex(num);
-    printf("%c char -> ", ch);
+    printf("%c char ->\n", ch);
+    printInBinary(ch);
+    printInDecimal(ch);
     printInHex(ch);
 
     return 0;

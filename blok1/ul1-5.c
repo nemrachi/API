@@ -1,11 +1,11 @@
-#include "ul1-5.h"
+#include "blok1_richnakova.h"
 
 float absolute(float num) {
     return (num >= 0) ? num : -num;
 }
 
 float modulo(float a, float b) {
-    a = (a < 0) ? -a : a;
+    a = absolute(a);
     return ((a/b) - (int)(a/b))*b;
 }
 
@@ -13,10 +13,12 @@ float power(float base, float power) {
     if (power == 0) {
         return 1;
     }
-    float result = base;
-    for (int i = 0; i < power-1; i++) {
+
+    float result = 1;
+    for (int i = 0; i < power; i++) {
         result *= base;
     }
+    
     return result;
 }
 
@@ -32,7 +34,7 @@ float factorial(float number) {
 float cosine(float degrees, float epsilon) {
     float cos = 0;
     float tmp = cos;
-    float n = 0;
+    int n = 0;
     float radians = modulo(degrees, 360.0) * (PI / 180.0);
 
     while(1) {

@@ -1,4 +1,4 @@
-#include "ul1-2.h"
+#include "blok1_richnakova.h"
 
 void printRomanNumber(int num) {
     while (num != 0) {
@@ -48,19 +48,19 @@ void printRomanNumber(int num) {
 int main(void) {
     int num;
 
-    printf("Enter 0 to end the program.\n");
+    printf("Enter 0 to end the program\n");
     while(1) {        
-        printf("Enter number: ");
+        printf("Enter a number (max 3999): ");
         scanf("%d", &num);
 
         if (!num) { 
             break; 
-        } else if (num < 0) {
-            printf("--- Error --- Input must be positive\n");
+        } else if (num < 0 || num > 3999) {
+            printf("--- Error --- Input must be between <0, 3999>\n");
             continue;
         }
         
-        printf("\t    > ");
+        printf("\t\t       > ");
         printRomanNumber(num);
         printf("\n");
     }    
