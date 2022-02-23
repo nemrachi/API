@@ -60,7 +60,7 @@ int main(void) {
             continue;
         }
         
-        printf("\t\t       > ");
+        printf("\t\t\t > ");
         printRomanNumber(num);
         printf("\n");
     }    
