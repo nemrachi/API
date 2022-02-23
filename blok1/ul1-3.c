@@ -11,7 +11,7 @@ void fibonacci(int k, int a, int b) {
 }
 
 void getFibonacciSeqTill(int k) {
-    // fibonacci <= k
+    // print fibonacci seq numbers that are less or equal with k
     fibonacci(k, 0, 1);
 }
 
