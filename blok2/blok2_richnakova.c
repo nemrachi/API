@@ -75,7 +75,7 @@ void ul2_2() {
     char str[] = "architektura_pocitacov_je_super_predmet_milujem_ho";
     printf("String: \t\t%s\n", str);
 
-    char *strP = &str;
+    char *strP = str;
     printf("String pointer: \t%p\n", strP);
     printf("String pointer +1: \t%p\n", ++strP);
 
@@ -83,7 +83,7 @@ void ul2_2() {
     printf("Second string: \t\t%s\n", strP);
 
     strP += INT_MAX;
-    *strP = "zivot_je_fajn";
+    *strP = 'n';
     printf("Third string: %s\n", strP);
 }
 
@@ -153,16 +153,17 @@ void printTabHorLine(int left, int middleSplitLine, int right, int leftLen, int 
 }
 
 void ul2_5_2() {
-    int x = 6, y = 2, maxLen;
+    int x = 6, y = 3, maxLen;
     char name[200], telNum[17], tmp;
     float height, weight;
 
-    // printf("Enter x y:\t\t");
-    // scanf("%d %d", &x, &y);
+    printf("Enter x y:\t\t");
+    scanf("%d %d", &x, &y);
 
     printf("Enter name:\t\t");
-    scanf("%c",&tmp);
+    scanf("%c", &tmp);
     fgets(name, 200, stdin);
+    name[strlen(name)-1] = '\0';
 
     printf("Enter height:\t\t");
     scanf("%f", &height);
@@ -173,6 +174,7 @@ void ul2_5_2() {
     printf("Enter phone number:\t");
     scanf("%c", &tmp);
     fgets(telNum, 17, stdin);
+    telNum[strlen(telNum)-1] = '\0';
     
     // get max lenght of value cell
     maxLen = strlen(name) + 2;
@@ -208,6 +210,7 @@ void ul2_5_2() {
     printLine(VER_LINE);
     printf(" %*s%.2f cm ", maxLen-intlen(height)-8, "", height);
     printLine(VER_LINE);
+    fflush(stdin);
     gotoxy(x, ++y);
 
     printTabHorLine(MID_R_LINE, MID_MID_LINE, MID_L_LINE, 10, maxLen);
@@ -235,20 +238,16 @@ void ul2_5_2() {
     resetConsoleColor();
 }
 
-int main() {
-    ul2_5_2();
-    return(0);
-}
-
 ///////////////////////////main///////////////////////////
 int main() {
+    // cd "c:\Users\emari\Projects\API\blok2\" && "C:\Program Files (x86)\MinGW\bin\"gcc blok2_richnakova.c -o blok2_richnakova && "c:\Users\emari\Projects\API\blok2\"blok2_richnakova
     //ul2_1_1();
     //ul2_1_2();
     //ul2_1_3();
     //ul2_1_4();
     //ul2_2();
     //ul2_5_1();
-    //ul2_5_2();
+    ul2_5_2();
 
     return 0;
 }
