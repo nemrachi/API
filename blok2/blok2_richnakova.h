@@ -1,8 +1,20 @@
-#include <stdio.h>
-#include <windows.h>
-#include <limits.h>
-#include <math.h>
-
+// ISO-8859-2 and Windows-1250 encodind
+#define ISO_L 165 // Ľ
+#define WIN_L 188 // Ľ
+#define ISO_S 169 // Š
+#define WIN_S 138 // Š
+#define ISO_T 171 // Ť
+#define WIN_T 141 // Ť
+#define ISO_Z 174 // Ž
+#define WIN_Z 142 // Ž
+#define ISO_l 181 // ľ
+#define WIN_l 190 // ľ
+#define ISO_s 185 // š
+#define WIN_s 154 // š
+#define ISO_t 187 // ť
+#define WIN_t 157 // ť
+#define ISO_z 190 // ž
+#define WIN_z 158 // ž 
 // terminal colors
 #define RED 1
 #define GREEN 2
@@ -40,6 +52,9 @@ void ul2_1_4();
 
 // ul2-2 +3
 void ul2_2();
+
+// void ul2-3-1 +2
+void ul2_3_1();
 
 // ul2-5-1 +1
 void ul2_5_1();

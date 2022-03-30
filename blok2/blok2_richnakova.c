@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <windows.h>
+#include <limits.h>
+#include <math.h>
+#include <string.h>
 #include "blok2_richnakova.h"
 
 static int a, b, result;
@@ -85,6 +90,55 @@ void ul2_2() {
     strP += INT_MAX;
     *strP = 'n';
     printf("Third string: %s\n", strP);
+}
+
+/////////////////////////////////////////////////////////////
+///////////////////////////ul2-3-1///////////////////////////
+/////////////////////////////////////////////////////////////
+void ul2_3_1() {
+    char fileInName[] = "C:\\Users\\emari\\Projects\\API\\blok2\\poviedka_in.html";
+    char fileOutName[] = "C:\\Users\\emari\\Projects\\API\\blok2\\poviedka_out.html";
+    FILE *fileIn;
+    FILE *fileOut;
+    int c;
+
+    fileIn = fopen(fileInName, "r");
+    fileOut = fopen(fileOutName, "w");
+
+    while((c = fgetc(fileIn)) != EOF) {
+        switch(c) {
+            case ISO_L:
+                c = WIN_L;
+                break;
+            case ISO_S:
+                c = WIN_S;
+                break;
+            case ISO_T:
+                c = WIN_T;
+                break;
+            case ISO_Z:
+                c = WIN_Z;
+                break;
+            case ISO_l:
+                c = WIN_l;
+                break;
+            case ISO_s:
+                c = WIN_s;
+                break;
+            case ISO_t:
+                c = WIN_t;
+                break;
+            case ISO_z:
+                c = WIN_z;
+                break;
+            default:
+                break;
+        }
+        fputc(c, fileOut);
+    }
+
+    fclose(fileIn);
+    fclose(fileOut);
 }
 
 /////////////////////////////////////////////////////////////
@@ -246,8 +300,9 @@ int main() {
     //ul2_1_3();
     //ul2_1_4();
     //ul2_2();
+    ul2_3_1();
     //ul2_5_1();
-    ul2_5_2();
+    //ul2_5_2();
 
     return 0;
 }
