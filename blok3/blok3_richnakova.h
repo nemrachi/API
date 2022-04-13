@@ -1,0 +1,3 @@
+#define AP_SERVER_IP_ADDR "147.175.115.34"
+#define AP_SERVER_PORT "777"
+
