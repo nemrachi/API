@@ -7,18 +7,18 @@
  * cd "c:\Users\emari\Projects\API\blok3\" && "C:\Program Files (x86)\MinGW\bin\"gcc.exe blok3_richnakova.c -o blok3_richnakova -lws2_32 && "c:\Users\emari\Projects\API\blok3\"blok3_richnakova
  */
 
-int init(struct addrinfo **resultP) {
-    WSADATA wsaData; // struktura WSADATA pre pracu s Winsock
-    int iResult;
+SOCKET ConnectSocket = INVALID_SOCKET;
 
+int init(struct addrinfo *resultMain) {
+    WSADATA wsaData; // struktura WSADATA pre pracu s Winsock
     // Initialize Winsock
-    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData); // zakladna inicializacia
+    int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData); // zakladna inicializacia
     if (iResult != 0) { // kontrola, ci nestala chyba
         printf("WSAStartup failed: %d\n", iResult);
         return 1;
     }
 
-    struct addrinfo *result = NULL; // struktura pre pracu s adresami
+    struct addrinfo *result = NULL;
     struct addrinfo hints;
 
     ZeroMemory(&hints, sizeof(hints));
@@ -36,26 +36,24 @@ int init(struct addrinfo **resultP) {
         printf("getaddrinfo didn't fail...\n");
     }
 
-    memmove(resultP, &result, sizeof(struct addrinfo));
+    memmove(resultMain, result, sizeof(struct addrinfo));
 
     return 0;
 }
 
-int createConnection(struct addrinfo **resultP, struct addrinfo **ptrP) {
+int createConnection(struct addrinfo *resultMain) {
     int iResult;
-    //vytvorenie socketu a pripojenie sa
-    SOCKET ConnectSocket = INVALID_SOCKET;
-
+    // vytvorenie socketu a pripojenie sa
     // Attempt to connect to the first address returned by
     // the call to getaddrinfo
-    struct addrinfo *result = *resultP, *ptr = result;
+    struct addrinfo *ptr = resultMain;
 
     // Create a SOCKET for connecting to server => pokus o vytvorenie socketu
     ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype,ptr->ai_protocol);
 
     if (ConnectSocket == INVALID_SOCKET) { // kontrola, ci nenastala chyba
         printf("Error at socket(): %ld\n", WSAGetLastError());
-        freeaddrinfo(result);
+        freeaddrinfo(resultMain);
         WSACleanup();
         return 1;
     } else {
@@ -78,22 +76,81 @@ int createConnection(struct addrinfo **resultP, struct addrinfo **ptrP) {
     }
 
     Sleep(250);
-    
+
     return 0;
 }
 
-int main() {
-    struct addrinfo *resultP = NULL, *ptrP = NULL;
+int sendMessage(char *sendbuf) {
+    int iResult = send(ConnectSocket, sendbuf, sizeof(sendbuf), 0);
+    if (iResult == SOCKET_ERROR) {
+        printf("send failed: %d\n", WSAGetLastError());
+        endSocket();
+        return 1;
+    }
 
-    int initResult = init(&resultP);
+    printf("Bytes Sent: %ld\n", iResult); // vypisanie poctu odoslanych dat
+
+    return 0;
+}
+
+void receiveMessage() {
+    char recvbuf[DEFAULT_BUFLEN];
+    int iResult = recv(ConnectSocket, recvbuf, DEFAULT_BUFLEN, 0); // funkcia na príjimanie
+    if (iResult > 0) {
+        printf("Bytes received: %d\n", iResult); // prisli validne data, vypis poctu
+    } else if (iResult == 0) {
+        printf("Connection closed\n"); // v tomto pripade server ukoncil komunikaciu
+    } else {
+        printf("recv failed with error: %d\n", WSAGetLastError()); // ina chyba
+    }
+    printf("\n%s", recvbuf);
+
+    return;
+}
+
+void endSocket() {
+    closesocket(ConnectSocket);
+    WSACleanup();
+}
+
+int main() {
+    // ############### connect to the server ###############
+    struct addrinfo result; // struktura pre pracu s adresami
+
+    int initResult = init(&result);
     if (initResult != 0) {
         return initResult;
     }
 
-    int connectResult = createConnection(&resultP, &ptrP);
+    int connectResult = createConnection(&result);
     if (connectResult != 0) {
         return connectResult;
     }
+
+    // ############### send/receive message ###############
+    // >> contact server
+    char sendbuf[DEFAULT_BUFLEN] = ""; // buffer (v zasade retazec), kam sa budu ukladat data, ktore chcete posielat
+    int sendResult = sendMessage(sendbuf);
+    if (sendResult != 0) {
+        return sendResult;
+    }
+    
+    receiveMessage();
+
+    // >> send AIS ID
+    memset(&sendbuf, 0, DEFAULT_BUFLEN);
+    memcpy(&sendbuf, "97025", sizeof(sendbuf));
+    
+    //fgets(sendbuf, DEFAULT_BUFLEN, stdin); // \n -> \0
+    sendResult = sendMessage(sendbuf);
+    if (sendResult != 0) {
+        return sendResult;
+    }
+
+    receiveMessage();
+
+    // ############### close socket ###############
+    endSocket();
 
     return 0;
 }
