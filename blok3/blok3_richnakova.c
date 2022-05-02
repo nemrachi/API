@@ -2,11 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include <windows.h>
 
+HANDLE hConsole;
+FILE *LOG;
+
 /** run program:
- * cd "c:\Users\emari\Projects\API\blok3\" && "c:\Program Files (x86)\MinGW\bin\"gcc.exe blok3_richnakova.c -o blok3_richnakova -lws2_32 && .\blok3_richnakova < .\in.txt
+ * cd c:\Users\emari\Projects\API\blok3\ && gcc blok3_richnakova.c -o blok3_richnakova -lws2_32 && .\blok3_richnakova < .\in.txt
  */
+
+WORD getConsoleAttr() {
+    hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
+    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
+    return consoleInfo.wAttributes;
+}
 
 SOCKET initConnection() { //uvodne nastavovacky
     WSADATA wsaData; // struktura WSADATA pre pracu s Winsock
@@ -77,14 +88,7 @@ SOCKET initConnection() { //uvodne nastavovacky
     return ConnectSocket;
 }
 
-void disconnect(SOCKET ConnectSocket) {
-    closesocket(ConnectSocket);
-    WSACleanup();
-}
-
 void sendMessage(SOCKET ConnectSocket, char *sendbuf) {
-    printf("%s\n", sendbuf);
-
     int iResult = send(ConnectSocket, sendbuf, strlen(sendbuf), 0);
     if (iResult == SOCKET_ERROR) {
         printf("send failed: %d\n", WSAGetLastError());
@@ -92,15 +96,14 @@ void sendMessage(SOCKET ConnectSocket, char *sendbuf) {
         exit(1);
     }
 
-    //printf("Bytes Sent: %ld\n", iResult); // vypisanie poctu odoslanych dat // TODO: log
+    printLog(sendbuf, iResult, true); // iResult = pocet odoslanych dat, client msg (client -> true)
 }
 
 void receiveMessage(SOCKET ConnectSocket, char *recvbuf) {
     memset(recvbuf, 0, DEFAULT_BUFLEN);
-
     int iResult = recv(ConnectSocket, recvbuf, DEFAULT_BUFLEN, 0); // funkcia na príjimanie
     if (iResult > 0) {
-        //printf("Bytes received: %d\n", iResult); // prisli validne data, vypis poctu // TODO: log
+        printLog(recvbuf, iResult, false); // iResult = pocet prijatych dat, server msg (no client -> false)
     } else if (iResult == 0) {
         printf("Connection closed\n"); // v tomto pripade server ukoncil komunikaciu
     } else {
@@ -108,71 +111,51 @@ void receiveMessage(SOCKET ConnectSocket, char *recvbuf) {
     }
 }
 
-int getIndexOfNewLine(char *str) {
-    int i = 0, len = strlen(str);
-    while (str[i] != '\n' && i < len) {
-        i++;
-    }
-    return i;
+void disconnect(SOCKET ConnectSocket) {
+    closesocket(ConnectSocket);
+    WSACleanup();
 }
 
 void getSendbuf(char *sendbuf) {
-    memset(sendbuf, 0, DEFAULT_BUFLEN);
-    fgets(sendbuf, DEFAULT_BUFLEN, stdin);
-    sendbuf[getIndexOfNewLine(sendbuf)] = '\0';
+    memset(sendbuf, 0, DEFAULT_BUFLEN); // reset sendbuf
+    fgets(sendbuf, DEFAULT_BUFLEN, stdin); // get sendbuf from stdin
+    sendbuf[getIndexOfNewLine(sendbuf)] = '\0'; // replace '\n' by '\0'
+}
+
+int getIndexOfNewLine(char *str) {
+    int i = 0, len = strlen(str);
+    while (str[i] != '\n' && i < len) { i++; }
+    return i;
 }
 
 void aisIdReminder(char *sendbuf, char *aisId) {
     int sum = 0, div;
 
     for (int i = 0; i < 5; i++) {
-        sum += aisId[i] - '0';
+        sum += aisId[i] - '0'; // get number from letter
     }
-    div = aisId[4] - '0';
-    div = (!div) ? 9 : div;
-    aisId[0] = (sum % div) + '0';
-    aisId[1] = '\0';
-
-    strcpy(sendbuf, aisId);
+    div = aisId[4] - '0'; // get 5th number of ais id
+    div = (!div) ? 9 : div; // check if it is 0
+    sendbuf[0] = (sum % div) + '0'; // get reminder
+    sendbuf[1] = '\0';
 }
 
-void decipherMsg(char *sendbuf, char *recvbuf) {
+void decipherMsg(char *sendbuf, char *recvbuf, char key) {
     int len = 132;
-    char *decipher = malloc(DEFAULT_BUFLEN);
-    char key = 55;
+    char *decipherStr = malloc(DEFAULT_BUFLEN);
 
     for (int i = 0; i < len; i++) {
-        if (isprint(recvbuf[i]^key)) {
-            decipher[i] = recvbuf[i]^key;
+        if (isprint(recvbuf[i]^key)) { // only decode when decoded char is printable
+            decipherStr[i] = recvbuf[i]^key;
         } else {
             len--;
         }
     }
-    decipher[len] = '\0';
+    decipherStr[len] = '\0';
 
-    strcpy(sendbuf, decipher);
-    free(decipher);
-    printf("\n");
+    strcpy(sendbuf, decipherStr);
+    free(decipherStr);
 }
-
-// void integralPart(char *sendbuf) {
-//     int i = 0;
-//     int j = 0;
-//     char *intPart = malloc(DEFAULT_BUFLEN);
-//     while (1) {
-//         if (isdigit(sendbuf[i])) {
-//             intPart[j++] = sendbuf[i];
-//         } else if (sendbuf[i] == '.' && j > 0) {
-//             intPart[j] = '\0';
-//             return intPart;
-//         } else {
-//             memset(intPart, 0, j);
-//             j = 0;
-//         }
-//         i++;
-//     }
-//     strcpy(sendbuf, intPart);
-// }
 
 void primeNumberLetters(char *sendbuf, char *recvbuf) {
     int count, k = 0, len = strlen(recvbuf);
@@ -181,84 +164,123 @@ void primeNumberLetters(char *sendbuf, char *recvbuf) {
     for (int i = 2; i < len; i++) {
         count = 0;
         for (int j = i-1; j >= 2; j--) {
-            if (i % j == 0) { count++; }
+            if (i % j == 0) { count++; } // count how many divisors number(i) has (except 1 and itself)
         }
-        if (!count) { str[k++] = recvbuf[i-1]; }
+        if (!count) { str[k++] = recvbuf[i-1]; } // if count of divisors == 0, number(i) is prime, get i.th letter
     }
     str[k] = '\0';
-    
+
     strcpy(sendbuf, str);
     free(str);
 }
 
-void printRecvbuf(HANDLE hConsole, char *recvbuf) { // display my messages left, his right, no word split
-    int len = strlen(recvbuf);
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
-    COORD point = csbi.dwCursorPosition;
-    short half = csbi.dwSize.X/2;
-    int end;
-    point.X = half;
+void caesarCipher(char *sendbuf, char *str, int shift) {
+    int len = strlen(str);
+    char decipherCh;
 
-    // while(1) {
-    //     end = csbi.dwSize.X-half;
-    //     while(recvbuf[end] != ' ') {
-    //         end--;
-    //     }
-    // } // TODO: rozdelovat cez medzery
-
-    for (int i = 0; i < len; i++) {
-        if (point.X >= csbi.dwSize.X) {
-            point.X = half;
-            point.Y += 1;
+    for (int i = 0; i < len; i++) { // turn lower letters to upper
+        if (islower(sendbuf[i])) {
+            sendbuf[i] -= 32;
         }
-        SetConsoleCursorPosition(hConsole, point);
-        putchar(recvbuf[i]);
-        point.X += 1;
+    }
+    
+    for (int i = 0; i < len; i++) { // shift and check, if after shift it is still in range [A-Z]
+        decipherCh = str[i] + shift;
+        sendbuf[i] = isalpha(decipherCh) ? decipherCh : ((decipherCh - 'A') % ('Z' - 'A' + 1)) + 'A';
+    }
+    sendbuf[len] = '\0';
+}
+
+void printSubstr(char *str, int start, int end) {
+    for (int i = start; i <= end; i++) {
+        printf("%c", str[i]);
     }
 }
 
-// TODO: bytes send/recv log to file
+void printOntheSide(char *str, bool right) {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    COORD point = csbi.dwCursorPosition;
+    int len = strlen(str), half = csbi.dwSize.X/2, end = 0;
+    point.X = (right) ? half : 0;
+
+    for (int i = 0; i < len; i++) {
+        for (int j = i; j < len; j++) {
+            if (((str[j] == ' ' || str[j] == '\n' || str[j] == '\0') 
+                && ((right && abs(point.X) < abs(csbi.dwSize.X)) || (!right && abs(point.X) < half-1))) 
+                || j+1 == len) {
+                end = j;
+            }
+            if (((right && abs(point.X) >= abs(csbi.dwSize.X)) || (!right && abs(point.X) >= half-1)) || j+1 == len) {
+                point.X = (right) ? half : 0;
+                SetConsoleCursorPosition(hConsole, point);
+
+                printSubstr(str, i, end);
+                i += (end-i);
+
+                point.X = (right) ? half : 0;
+                point.Y += 1;
+                SetConsoleCursorPosition(hConsole, point);
+                break;
+            }
+            point.X++;
+        }
+    }
+
+    point.X = 0;
+    SetConsoleCursorPosition(hConsole, point);
+}
+
+void printLog(char *str, int bytes, bool client) {
+    if (client) {
+        printOntheSide(str, false); // left side -> false right
+        fprintf(LOG, "C > %s [bytes send: %d]\n", str, bytes);
+    } else {
+        printOntheSide(str, true); // right side -> true right
+        fprintf(LOG, "S < %s [bytes received: %d]\n", str, bytes);
+    }
+}
 
 int main() {
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
-    GetConsoleScreenBufferInfo(hConsole, &consoleInfo);
-    WORD origAttr = consoleInfo.wAttributes; // save original white console text
-
+    WORD origAttr = getConsoleAttr(); // save original white console color of text
     SOCKET ConnectSocket;
     char *sendbuf = malloc(DEFAULT_BUFLEN);
     strcpy(sendbuf, " ");
     char *recvbuf = malloc(DEFAULT_BUFLEN);
     char *aisId = malloc(DEFAULT_BUFLEN);
+    LOG = fopen("./log.chat", "w");
 
-    SetConsoleOutputCP(CP_UTF8); // 1.quest: display diacriticts
-    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN); // 2.quest: display console in green color
+    SetConsoleOutputCP(CP_UTF8); // display diacriticts
+    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN); // display console in green color
 
     ConnectSocket = initConnection();
 
     // >>>>>>>>>>>>> communication <<<<<<<<<<<<<
     while (1) {
-
         sendMessage(ConnectSocket, sendbuf);
         receiveMessage(ConnectSocket, recvbuf);
-        printRecvbuf(hConsole, recvbuf);
 
         if (strstr(recvbuf, "I need you to do something for me...")) {
             strcpy(aisId, sendbuf);
         }
         if (strstr(recvbuf, "5 digits of your student ID")) {
-            aisIdReminder(sendbuf, aisId); // 3.quest: computed ais id reminder
+            aisIdReminder(sendbuf, aisId); // computed reminder from sum of first 5 numbers of ais id
             continue;
         }
         if (strcmp(sendbuf, "123") == 0) {
-            decipherMsg(sendbuf, recvbuf); // 4.quest: decipher message
+            decipherMsg(sendbuf, recvbuf, 55); // decipher message
             continue;
         }
         if (strcmp(sendbuf, "PRIMENUMBER") == 0) {
-            memset(sendbuf, 0, DEFAULT_BUFLEN);
-            primeNumberLetters(sendbuf, recvbuf); // 5.quest: take every character on prime number letter positions
+            primeNumberLetters(sendbuf, recvbuf); // from recvbuf take every character on prime number letter positions
             continue;
+        }
+        if (strstr(recvbuf, "THE BONUS IS HERE")) {
+            caesarCipher(sendbuf, "OBVMHKR", 7); // ceaser cipher shift by 7
+            continue;
+        }
+        if (strcmp(sendbuf, "VICTORY") == 0) { // end of communication
+            break;
         }
         
         getSendbuf(sendbuf);
@@ -267,6 +289,7 @@ int main() {
     free(sendbuf);
     free(recvbuf);
     free(aisId);
+    fclose(LOG);
     disconnect(ConnectSocket);
     SetConsoleTextAttribute(hConsole, origAttr);
 
