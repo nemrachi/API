@@ -84,7 +84,7 @@ void ul2_2() {
     printf("String pointer: \t%p\n", strP);
     printf("String pointer +1: \t%p\n", ++strP);
 
-    *strP = 'm'; // can't properly write string in 1 char memory slot, it changes only char
+    *strP = 'x'; // can't properly write string in 1 char memory slot, it changes only char
     printf("Second string: \t\t%s\n", strP);
 
     strP += INT_MAX;
@@ -234,7 +234,7 @@ void ul2_5_2() {
     maxLen = strlen(name) + 2;
     if (maxLen < intlen((int)height)+8) { maxLen = intlen((int)height) + 8; }
     if (maxLen < intlen((int)weight)+8) { maxLen = intlen((int)weight) + 8; }
-    if (maxLen < strlen(telNum)) { maxLen = strlen(telNum)+2; }
+    if (maxLen < (int)strlen(telNum)) { maxLen = strlen(telNum)+2; }
     
     system("cls"); // clear screen
     gotoxy(x, y); // point cursor in terminal
@@ -252,7 +252,7 @@ void ul2_5_2() {
     printLine(VER_LINE);
     printf(" Meno%4s ", "");
     printLine(VER_LINE);
-    printf(" %*s%s ", maxLen-strlen(name)-2 , "", name);
+    printf(" %*s%s ", maxLen-(int)strlen(name)-2 , "", name);
     printLine(VER_LINE);
     gotoxy(x, ++y);
 
@@ -283,7 +283,7 @@ void ul2_5_2() {
     printLine(VER_LINE);
     printf(" Tel.%5s", "");
     printLine(VER_LINE);
-    printf(" %*s%s ", maxLen - strlen(telNum)-2, "", telNum);
+    printf(" %*s%s ", maxLen-(int)strlen(telNum)-2, "", telNum);
     printLine(VER_LINE);
     gotoxy(x, ++y);
 
@@ -299,8 +299,8 @@ int main() {
     //ul2_1_2();
     //ul2_1_3();
     //ul2_1_4();
-    //ul2_2();
-    ul2_3_1();
+    ul2_2();
+    //ul2_3_1();
     //ul2_5_1();
     //ul2_5_2();
 
