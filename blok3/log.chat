@@ -13,7 +13,7 @@ S < You sent me the correct code. Now disconnect and reprogram your software to 
 C > 753421 [bytes send: 6]
 S < You sent me the correct code. Now send me the result of the following. Compute the sum of first 5 digits of your student ID, then divide it by the fifth digit and send me the remainder of the division. WARNING - If the fifth digit is zero, use 9 instead. The result must be computed by your software! 
  [bytes received: 303]
-C > 3 [bytes send: 1]
+C > 353421 [bytes send: 6]
 S < You sent the correct remainder, now reprogram your software so that your messages will be displayed on the left side of the screen and mine on the right side of the screen If you need advice check the documentation for excercise 2.5.2. MAKE SURE OF THIS - your messages must end before the half of the screen, mine start after it. No word can be divided across lines. After finishing reconnect and send me this code 333222111.
  [bytes received: 428]
 C > 333222111 [bytes send: 9]
@@ -36,7 +36,7 @@ S < Yes, Trinity was in the Eiffel Tower, but agent Smith kidnapped her. Now, se
 C > PRIMENUMBER [bytes send: 11]
 S < XLOZGP.R.ACLHCOGAGTER
  [bytes received: 23]
-C > LOG.CHAT [bytes send: 8]
+C > LOG.CHAT ›Çê– [bytes send: 14]
 S < Correct. It is crucial to record all our communication and send it to Sion. Therefore, re-code your software to store all our communication to a file. It must be clear from the log who sent what. Then send me the string Trinity.
  [bytes received: 230]
 C > Trinity [bytes send: 7]

@@ -100,7 +100,7 @@ void sendMessage(SOCKET ConnectSocket, char *sendbuf) {
 }
 
 void receiveMessage(SOCKET ConnectSocket, char *recvbuf) {
-    memset(recvbuf, 0, DEFAULT_BUFLEN);
+    memset(recvbuf, '\0', DEFAULT_BUFLEN);
     int iResult = recv(ConnectSocket, recvbuf, DEFAULT_BUFLEN, 0); // funkcia na príjimanie
     if (iResult > 0) {
         printLog(recvbuf, iResult, false); // iResult = pocet prijatych dat, server msg (no client -> false)
@@ -117,7 +117,7 @@ void disconnect(SOCKET ConnectSocket) {
 }
 
 void getSendbuf(char *sendbuf) {
-    memset(sendbuf, 0, DEFAULT_BUFLEN); // reset sendbuf
+    memset(sendbuf, '\0', DEFAULT_BUFLEN); // reset sendbuf
     fgets(sendbuf, DEFAULT_BUFLEN, stdin); // get sendbuf from stdin
     sendbuf[getIndexOfNewLine(sendbuf)] = '\0'; // replace '\n' by '\0'
 }
@@ -137,7 +137,6 @@ void aisIdReminder(char *sendbuf, char *aisId) {
     div = aisId[4] - '0'; // get 5th number of ais id
     div = (!div) ? 9 : div; // check if it is 0
     sendbuf[0] = (sum % div) + '0'; // get reminder
-    sendbuf[1] = '\0';
 }
 
 void decipherMsg(char *sendbuf, char *recvbuf, char key) {
@@ -151,7 +150,6 @@ void decipherMsg(char *sendbuf, char *recvbuf, char key) {
             len--;
         }
     }
-    decipherStr[len] = '\0';
 
     strcpy(sendbuf, decipherStr);
     free(decipherStr);
@@ -168,7 +166,6 @@ void primeNumberLetters(char *sendbuf, char *recvbuf) {
         }
         if (!count) { str[k++] = recvbuf[i-1]; } // if count of divisors == 0, number(i) is prime, get i.th letter
     }
-    str[k] = '\0';
 
     strcpy(sendbuf, str);
     free(str);
@@ -186,9 +183,8 @@ void caesarCipher(char *sendbuf, char *str, int shift) {
     
     for (int i = 0; i < len; i++) { // shift and check, if after shift it is still in range [A-Z]
         decipherCh = str[i] + shift;
-        sendbuf[i] = isalpha(decipherCh) ? decipherCh : ((decipherCh - 'A') % ('Z' - 'A' + 1)) + 'A';
+        sendbuf[i] = isalpha(decipherCh) ? decipherCh : ((decipherCh - 'Z') + 'A' - 1);
     }
-    sendbuf[len] = '\0';
 }
 
 void printSubstr(char *str, int start, int end) {
