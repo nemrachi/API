@@ -36,7 +36,7 @@ S < Yes, Trinity was in the Eiffel Tower, but agent Smith kidnapped her. Now, se
 C > PRIMENUMBER [bytes send: 11]
 S < XLOZGP.R.ACLHCOGAGTER
  [bytes received: 23]
-C > LOG.CHAT ›Çê– [bytes send: 14]
+C > LOG.CHATp«yÃ [bytes send: 14]
 S < Correct. It is crucial to record all our communication and send it to Sion. Therefore, re-code your software to store all our communication to a file. It must be clear from the log who sent what. Then send me the string Trinity.
  [bytes received: 230]
 C > Trinity [bytes send: 7]

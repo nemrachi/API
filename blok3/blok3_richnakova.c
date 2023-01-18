@@ -1,9 +1,17 @@
-#include "blok3_richnakova.h"
 #include <stdio.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <windows.h>
+
+#define AP_SERVER_IP_ADDR "147.175.115.34"
+#define AP_SERVER_PORT "777"
+#define DEFAULT_BUFLEN 4096
+typedef char bool;
+#define true 1
+#define false 0
 
 HANDLE hConsole;
 FILE *LOG;
@@ -88,6 +96,61 @@ SOCKET initConnection() { //uvodne nastavovacky
     return ConnectSocket;
 }
 
+void printSubstr(char *str, int start, int end) {
+    for (int i = start; i <= end; i++) {
+        printf("%c", str[i]);
+    }
+}
+
+void printOntheSide(char *str, bool right) {
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    COORD point = csbi.dwCursorPosition;
+    int len = strlen(str), half = csbi.dwSize.X/2, end = 0;
+    point.X = (right) ? half : 0;
+
+    for (int i = 0; i < len; i++) {
+        for (int j = i; j < len; j++) {
+            if (((str[j] == ' ' || str[j] == '\n' || str[j] == '\0') 
+                && ((right && abs(point.X) < abs(csbi.dwSize.X)) || (!right && abs(point.X) < half-1))) 
+                || j+1 == len) {
+                end = j;
+            }
+            if (((right && abs(point.X) >= abs(csbi.dwSize.X)) || (!right && abs(point.X) >= half-1)) || j+1 == len) {
+                point.X = (right) ? half : 0;
+                SetConsoleCursorPosition(hConsole, point);
+
+                printSubstr(str, i, end);
+                i += (end-i);
+
+                point.X = (right) ? half : 0;
+                point.Y += 1;
+                SetConsoleCursorPosition(hConsole, point);
+                break;
+            }
+            point.X++;
+        }
+    }
+
+    point.X = 0;
+    SetConsoleCursorPosition(hConsole, point);
+}
+
+void printLog(char *str, int bytes, bool client) {
+    if (client) {
+        printOntheSide(str, false); // left side -> false right
+        fprintf(LOG, "C > %s [bytes send: %d]\n", str, bytes);
+    } else {
+        printOntheSide(str, true); // right side -> true right
+        fprintf(LOG, "S < %s [bytes received: %d]\n", str, bytes);
+    }
+}
+
+void disconnect(SOCKET ConnectSocket) {
+    closesocket(ConnectSocket);
+    WSACleanup();
+}
+
 void sendMessage(SOCKET ConnectSocket, char *sendbuf) {
     int iResult = send(ConnectSocket, sendbuf, strlen(sendbuf), 0);
     if (iResult == SOCKET_ERROR) {
@@ -111,21 +174,16 @@ void receiveMessage(SOCKET ConnectSocket, char *recvbuf) {
     }
 }
 
-void disconnect(SOCKET ConnectSocket) {
-    closesocket(ConnectSocket);
-    WSACleanup();
+int getIndexOfNewLine(char *str) {
+    int i = 0, len = strlen(str);
+    while (str[i] != '\n' && i < len) { i++; }
+    return i;
 }
 
 void getSendbuf(char *sendbuf) {
     memset(sendbuf, '\0', DEFAULT_BUFLEN); // reset sendbuf
     fgets(sendbuf, DEFAULT_BUFLEN, stdin); // get sendbuf from stdin
     sendbuf[getIndexOfNewLine(sendbuf)] = '\0'; // replace '\n' by '\0'
-}
-
-int getIndexOfNewLine(char *str) {
-    int i = 0, len = strlen(str);
-    while (str[i] != '\n' && i < len) { i++; }
-    return i;
 }
 
 void aisIdReminder(char *sendbuf, char *aisId) {
@@ -184,56 +242,6 @@ void caesarCipher(char *sendbuf, char *str, int shift) {
     for (int i = 0; i < len; i++) { // shift and check, if after shift it is still in range [A-Z]
         decipherCh = str[i] + shift;
         sendbuf[i] = isalpha(decipherCh) ? decipherCh : ((decipherCh - 'Z') + 'A' - 1);
-    }
-}
-
-void printSubstr(char *str, int start, int end) {
-    for (int i = start; i <= end; i++) {
-        printf("%c", str[i]);
-    }
-}
-
-void printOntheSide(char *str, bool right) {
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-    GetConsoleScreenBufferInfo(hConsole, &csbi);
-    COORD point = csbi.dwCursorPosition;
-    int len = strlen(str), half = csbi.dwSize.X/2, end = 0;
-    point.X = (right) ? half : 0;
-
-    for (int i = 0; i < len; i++) {
-        for (int j = i; j < len; j++) {
-            if (((str[j] == ' ' || str[j] == '\n' || str[j] == '\0') 
-                && ((right && abs(point.X) < abs(csbi.dwSize.X)) || (!right && abs(point.X) < half-1))) 
-                || j+1 == len) {
-                end = j;
-            }
-            if (((right && abs(point.X) >= abs(csbi.dwSize.X)) || (!right && abs(point.X) >= half-1)) || j+1 == len) {
-                point.X = (right) ? half : 0;
-                SetConsoleCursorPosition(hConsole, point);
-
-                printSubstr(str, i, end);
-                i += (end-i);
-
-                point.X = (right) ? half : 0;
-                point.Y += 1;
-                SetConsoleCursorPosition(hConsole, point);
-                break;
-            }
-            point.X++;
-        }
-    }
-
-    point.X = 0;
-    SetConsoleCursorPosition(hConsole, point);
-}
-
-void printLog(char *str, int bytes, bool client) {
-    if (client) {
-        printOntheSide(str, false); // left side -> false right
-        fprintf(LOG, "C > %s [bytes send: %d]\n", str, bytes);
-    } else {
-        printOntheSide(str, true); // right side -> true right
-        fprintf(LOG, "S < %s [bytes received: %d]\n", str, bytes);
     }
 }
 
